@@ -17,3 +17,31 @@
     max-width: 1200px;
   }
 }
+
+.gallery{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.gallery-link{
+  width: calc((min-width-gap*2)/3);
+}
+
+.gallery-link img{
+    display: block;
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.galleryItemData{
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  justify-content: center;
+}
+
+.form{
+  text-align: center;
+}

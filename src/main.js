@@ -7,45 +7,55 @@ import { clearGallery } from "./js/render-functions";
 import { showLoader } from "./js/render-functions";
 import { hideLoader } from "./js/render-functions";
 
+//Обработка значения инпута (пустая или нет)
+function checkValue(value) {
+    const trimedValue = value.trim();
+    if (trimedValue === '') {
+        const error = new Error();
+        error.code = 'EMPTY_FIELD';
+        throw error;
+    } return trimedValue;
+}
+
 const searchForm = document.querySelector("form");
 const searchInput = document.querySelector('input');
 
-const error = new Error();
+//Проверка основных функций на ошибки
 
-searchForm.addEventListener("submit", event => {
-    event.preventDefault();
-    const inputValue = searchInput.value.trim();
-    if (inputValue === '') {
-        hideLoader();
-        error.code = 'EMPTY_FIELD';
-        throw error;
-        return;
-    }
-    clearGallery();
-    showLoader();
-    searchPhoto(inputValue)
-        .then((hits) => {
-            galleryRender(hits);
-        })
-        .catch(error => {
-            if (error.code === 'NO_IMAGES') {
-                iziToast.error({
-                    message: 'Sorry, there are no images matching your search query. Please try again!',
-                });
-            } else if (error.code === 'EMPTY_FIELD') {
+const mainFunction = async () => {
+    try {
+        const query = checkValue(searchInput.value);
+        const photos = await searchPhoto(query);
+        galleryRender(photos);
+    } catch (error) {
+        switch (error.code) {
+            case "EMPTY_FIELD":
                 iziToast.error({
                     message: "Field can't be empty."
                 });
-            } else {
+                break;
+            
+            case 'NO_IMAGES':
+                iziToast.error({
+                    message: 'Sorry, there are no images matching your search query. Please try again!',
+                });
+                break;
+
+            default:
                 iziToast.error({
                     message: "Something went wrong. Please try again later."
                 });
                 console.error(error);
-            }
-        })
-        .finally(() => {
-            hideLoader();
-        });
+        }
+    } finally {
+        hideLoader();
+    }
+};
+
+//Обработка сабмита
+searchForm.addEventListener("submit", event => {
+    event.preventDefault();
+    clearGallery();
+    showLoader();
+    mainFunction();
 });
-
-
