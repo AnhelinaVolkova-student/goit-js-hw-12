@@ -53,3 +53,12 @@ export function showLoader() {
 export function hideLoader() {
     loader.style.display = "none";
 }
+
+const loadButton = document.querySelector('[type="button"]');
+export function showLoadBtn() {
+    loadButton.style.display = "";
+}
+
+export function hideLoadBtn() {
+    loadButton.style.display = "none";
+}

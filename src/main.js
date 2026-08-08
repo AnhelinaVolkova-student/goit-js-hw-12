@@ -6,7 +6,8 @@ import { galleryRender } from "./js/render-functions";
 import { clearGallery } from "./js/render-functions";
 import { showLoader } from "./js/render-functions";
 import { hideLoader } from "./js/render-functions";
-import axios from "axios";
+import { showLoadBtn } from "./js/render-functions";
+import { hideLoadBtn } from "./js/render-functions";
 
 
 
@@ -27,9 +28,8 @@ const searchInput = document.querySelector('input');
 
 //Проверка основных функций на ошибки
 
-const mainFunction = async (pageNumber) => {
+const mainFunction = async (query, pageNumber) => {
     try {
-        const query = checkValue(searchInput.value);
         const photos = await searchPhoto(query, pageNumber);
         galleryRender(photos.hits);
         return photos;
@@ -58,18 +58,25 @@ const mainFunction = async (pageNumber) => {
     }
 };
 
-const loadButton = document.querySelector('[type="button"]');
-loadButton.style.display = "none";
 
-const showGallery = async(page) => {
+
+const showGallery = async(query, page) => {
     
     showLoader();
-    const galleryData = await mainFunction(page);
+    hideLoadBtn();
+    try {
+        const galleryData = await mainFunction(query, page);
+    } catch (error) {
+        iziToast.error({
+            message: "Something went wrong. Please try again later."
+        });
+        console.error(error);
+    }
     const totalImages = galleryData.totalHits;
     const imagesPerPage = galleryData.per_page;
     const maxPages = Math.floor(totalImages / 15);
-    if (maxPages <= page) {
-        loadButton.style.display = "none";
+    if (maxPages <= page || totalHits < 15) {
+        hideLoadBtn();
         const error = new Error();
         error.code = 'MAX_PAGES';
         throw error;
@@ -83,10 +90,11 @@ const showGallery = async(page) => {
             behavior: "smooth",
         });
     }else {
-        loadButton.style.display = "";
+        showLoadBtn();
     }
 }
 
+const loadButton = document.querySelector('[type="button"]');
 loadButton.addEventListener("click", event => {
     event.preventDefault();
     pageNumber += 1;
@@ -111,8 +119,24 @@ loadButton.addEventListener("click", event => {
 searchForm.addEventListener("submit", event => {
     event.preventDefault();
     clearGallery();
+    hideLoadBtn();
+    const query = checkValue(searchInput.value);
     pageNumber = 1;
-    showGallery(pageNumber);
+    showGallery(pageNumber)
+        .then()
+        .catch(error => {
+            if (error.code === 'MAX_PAGES') {
+                iziToast.error({
+                    message: "We're sorry, but you've reached the end of search results."
+                });
+                console.error(error);
+            } else {
+                iziToast.error({
+                    message: "Something went wrong. Please try again later."
+                });
+                console.error(error);
+            }
+        });
 });
 
 
