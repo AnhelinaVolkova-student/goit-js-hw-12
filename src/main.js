@@ -1,6 +1,7 @@
 import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
 
+//импорт функций из файлов
 import { searchPhoto } from "./js/pixabay-api";
 import { galleryRender } from "./js/render-functions";
 import { clearGallery } from "./js/render-functions";
@@ -9,7 +10,30 @@ import { hideLoader } from "./js/render-functions";
 import { showLoadBtn } from "./js/render-functions";
 import { hideLoadBtn } from "./js/render-functions";
 
+//добавление "базовых" элементов
+const searchForm = document.querySelector("form");
+const searchInput = document.querySelector('input');
+const loadButton = document.querySelector('.loadMoreButton');
 
+//началльные параметры
+hideLoadBtn();
+let pageNumber = 1;
+
+//Обработка сабмита
+searchForm.addEventListener("submit", event => {
+    event.preventDefault();
+    clearGallery();
+    hideLoadBtn();
+    pageNumber = 1;
+    loadGallery(pageNumber);
+});
+
+//обработка кнопки
+loadButton.addEventListener("click", event => {
+    event.preventDefault();
+    pageNumber += 1;
+    loadGallery(pageNumber);
+});
 
 //Обработка значения инпута (пустая или нет)
 function checkValue(value) {
@@ -21,13 +45,27 @@ function checkValue(value) {
     } return trimedValue;
 }
 
-let pageNumber = 1;
+//Загрузка галереи с значением из инпута
+function loadGallery(pageNumber) {
+    const query = checkValue(searchInput.value);
+    showGallery(query, pageNumber)
+        .then()
+        .catch(error => {
+            if (error.code === 'MAX_PAGES') {
+                iziToast.error({
+                    message: "We're sorry, but you've reached the end of search results."
+                });
+                console.error(error);
+            } else {
+                iziToast.error({
+                    message: "Something went wrong. Please try again later."
+                });
+                console.error(error);
+            }
+        });
+}
 
-const searchForm = document.querySelector("form");
-const searchInput = document.querySelector('input');
-
-//Проверка основных функций на ошибки
-
+//Проверка основных функций (рендер и поиск фото) на ошибки
 const mainFunction = async (query, pageNumber) => {
     try {
         const photos = await searchPhoto(query, pageNumber);
@@ -58,86 +96,45 @@ const mainFunction = async (query, pageNumber) => {
     }
 };
 
-
-
-const showGallery = async(query, page) => {
-    
+//Добавляем зависимость галереи от страницы и колличества результатов
+const showGallery = async(query, page) => { 
     showLoader();
     hideLoadBtn();
-    try {
-        const galleryData = await mainFunction(query, page);
-    } catch (error) {
-        iziToast.error({
-            message: "Something went wrong. Please try again later."
+    const galleryData = await mainFunction(query, page)
+        .then(data => {
+            const totalImages = galleryData.totalHits;
+            const imagesPerPage = galleryData.per_page;
+            const maxPages = Math.floor(totalImages / 15);
+            if (maxPages <= page || totalHits < 15) {
+                hideLoadBtn();
+                const error = new Error();
+                error.code = 'MAX_PAGES';
+                throw error;
+            } else if (page>1) {
+                const galleryItem = document.querySelector(".gallery-link");
+                const galleryItemParams = galleryItem.getBoundingClientRect();
+                const itemHeight = galleryItemParams.height;
+                const scrollValue = itemHeight * 2;
+                window.scrollBy({
+                    top: scrollValue,
+                    behavior: "smooth",
+                });
+            }else {
+                showLoadBtn();
+            }
+        })
+        .catch(error => {
+            iziToast.error({
+                message: "Something went wrong. Please try again later."
+            });
+            console.error(error);
         });
-        console.error(error);
-    }
-    const totalImages = galleryData.totalHits;
-    const imagesPerPage = galleryData.per_page;
-    const maxPages = Math.floor(totalImages / 15);
-    if (maxPages <= page || totalHits < 15) {
-        hideLoadBtn();
-        const error = new Error();
-        error.code = 'MAX_PAGES';
-        throw error;
-    } else if (page>1) {
-        const galleryItem = document.querySelector(".gallery-link");
-        const galleryItemParams = galleryItem.getBoundingClientRect();
-        const itemHeight = galleryItemParams.height;
-        const scrollValue = itemHeight * 2;
-        window.scrollBy({
-            top: scrollValue,
-            behavior: "smooth",
-        });
-    }else {
-        showLoadBtn();
-    }
 }
 
-const loadButton = document.querySelector('[type="button"]');
-hideLoadBtn();
-loadButton.addEventListener("click", event => {
-    event.preventDefault();
-    pageNumber += 1;
-    showGallery(pageNumber)
-        .then()
-        .catch(error => {
-            if (error.code === 'MAX_PAGES') {
-                iziToast.error({
-                    message: "We're sorry, but you've reached the end of search results."
-                });
-                console.error(error);
-            } else {
-                iziToast.error({
-                    message: "Something went wrong. Please try again later."
-                });
-                console.error(error);
-            }
-        });
-});
 
-//Обработка сабмита
-searchForm.addEventListener("submit", event => {
-    event.preventDefault();
-    clearGallery();
-    hideLoadBtn();
-    const query = checkValue(searchInput.value);
-    pageNumber = 1;
-    showGallery(pageNumber)
-        .then()
-        .catch(error => {
-            if (error.code === 'MAX_PAGES') {
-                iziToast.error({
-                    message: "We're sorry, but you've reached the end of search results."
-                });
-                console.error(error);
-            } else {
-                iziToast.error({
-                    message: "Something went wrong. Please try again later."
-                });
-                console.error(error);
-            }
-        });
-});
+
+
+
+
 
 

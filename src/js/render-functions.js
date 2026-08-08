@@ -5,7 +5,7 @@ const SimpleLightbox =
   SimpleLightboxModule.default ?? SimpleLightboxModule;
 
 const galleryForm = document.querySelector(".gallery");
-const gallery = new SimpleLightbox(".gallery a");
+const gallery = new SimpleLightbox(".gallery-link");
 
 export function galleryRender(galleryItems) {
     const markup = galleryItems.map((galleryItem) =>
