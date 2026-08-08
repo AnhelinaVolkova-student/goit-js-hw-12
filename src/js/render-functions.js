@@ -35,7 +35,7 @@ export function galleryRender(galleryItems) {
             </a>
         </li> `
     ).join("");
-    galleryForm.insertAdjacentHTML("afterbegin", markup);
+    galleryForm.insertAdjacentHTML("beforeend", markup);
 
     // сообщаем SimpleLightbox о новых ссылках
     gallery.refresh();
