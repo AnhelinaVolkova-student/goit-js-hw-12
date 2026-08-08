@@ -95,6 +95,7 @@ const showGallery = async(query, page) => {
 }
 
 const loadButton = document.querySelector('[type="button"]');
+hideLoadBtn();
 loadButton.addEventListener("click", event => {
     event.preventDefault();
     pageNumber += 1;
