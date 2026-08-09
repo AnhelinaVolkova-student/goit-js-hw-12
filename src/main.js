@@ -69,8 +69,6 @@ const loadGallery = async (currentQuery, pageNumber) => {
         showLoader();
         hideLoadBtn();
         const photoDatas = await searchPhoto(currentQuery, pageNumber);
-        const resultPhotos = await scrollPhotos(photoDatas, pageNumber);
-        //galleryRender(resultPhotos);
     }
     catch (error) {
         switch (error.code) {    
