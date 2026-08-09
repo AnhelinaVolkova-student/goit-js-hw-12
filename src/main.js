@@ -29,7 +29,7 @@ searchForm.addEventListener("submit", async event => {
     try {
         currentQuery = await checkValue(searchInput.value);
     } catch (error) {
-        if (error.code = "EMPTY_FIELD") {
+        if (error.code === "EMPTY_FIELD") {
             iziToast.error({
                 message: "Field can't be empty."
             });
