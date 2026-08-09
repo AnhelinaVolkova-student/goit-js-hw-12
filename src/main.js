@@ -29,16 +29,18 @@ searchForm.addEventListener("submit", async event => {
     try {
         currentQuery = await checkValue(searchInput.value);
     } catch (error) {
-        if (error.vode = "EMPTY_FIELD") {
+        if (error.code = "EMPTY_FIELD") {
             iziToast.error({
                 message: "Field can't be empty."
             });
             console.error(error);
+            return;
         } else {
             iziToast.error({
                 message: "Something went wrong. Please try again later."
             });
             console.error(error);
+            return;
         }
     }
     loadGallery(currentQuery, pageNumber);
@@ -49,7 +51,6 @@ loadButton.addEventListener("click", event => {
     event.preventDefault();
     pageNumber += 1;
     loadGallery(currentQuery, pageNumber);
-    hideLoadBtn();
 });
 
 
@@ -106,10 +107,11 @@ const scrollPhotos = async(data, page) => {
     const maxPages = Math.ceil(totalHitsValue / imagesPerPage);
     if (maxPages <= page) {
         hideLoadBtn();
+        galleryRender(data.hits);
         const error = new Error();
         error.code = 'MAX_PAGES';
         throw error;
-    } else {
+    } else if (page > 1) {
         galleryRender(data.hits);
         const galleryItem = document.querySelector(".gallery-link");
         const galleryItemParams = galleryItem.getBoundingClientRect();
@@ -119,6 +121,9 @@ const scrollPhotos = async(data, page) => {
             top: scrollValue,
             behavior: "smooth",
         });
+        showLoadBtn();
+    } else {
+        galleryRender(data.hits);
         showLoadBtn();
     }
 };
