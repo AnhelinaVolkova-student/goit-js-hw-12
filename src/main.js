@@ -17,27 +17,43 @@ const loadButton = document.querySelector('.loadMoreButton');
 
 //началльные параметры
 hideLoadBtn();
-let pageNumber;
+let pageNumber = 1;
+let currentQuery = "";
 
 //Обработка сабмита
-searchForm.addEventListener("submit", event => {
+searchForm.addEventListener("submit", async event => {
     event.preventDefault();
     clearGallery();
     hideLoadBtn();
     pageNumber = 1;
-    loadGallery(pageNumber);
+    try {
+        currentQuery = await checkValue(searchInput.value);
+    } catch (error) {
+        if (error.vode = "EMPTY_FIELD") {
+            iziToast.error({
+                message: "Field can't be empty."
+            });
+            console.error(error);
+        } else {
+            iziToast.error({
+                message: "Something went wrong. Please try again later."
+            });
+            console.error(error);
+        }
+    }
+    loadGallery(currentQuery, pageNumber);
 });
 
 //обработка кнопки
 loadButton.addEventListener("click", event => {
     event.preventDefault();
     pageNumber += 1;
-    loadGallery(pageNumber);
+    loadGallery(currentQuery, pageNumber);
     hideLoadBtn();
 });
 
 
-const loadGallery = async (pageNumber) => {
+const loadGallery = async (currentQuery, pageNumber) => {
     /*
     Check Value (EMPTY_FIELD)
     Serch photo (NO_IMAGES)
@@ -51,20 +67,12 @@ const loadGallery = async (pageNumber) => {
     try {
         showLoader();
         hideLoadBtn();
-        const currentQuery = await checkValue(searchInput.value);
         const photoDatas = await searchPhoto(currentQuery, pageNumber);
         const resultPhotos = await scrollPhotos(photoDatas, pageNumber);
         //galleryRender(resultPhotos);
     }
     catch (error) {
-        switch (error.code) {
-            case "EMPTY_FIELD":
-                iziToast.error({
-                    message: "Field can't be empty."
-                });
-                console.error(error);
-                break;
-            
+        switch (error.code) {    
             case "NO_IMAGES":
                 iziToast.error({
                     message: 'Sorry, there are no images matching your search query. Please try again!',
@@ -95,11 +103,8 @@ const loadGallery = async (pageNumber) => {
 const scrollPhotos = async(data, page) => {
     const totalHitsValue = data.totalHits;
     const imagesPerPage = data.per_page;
-    const maxPages = Math.floor(totalHitsValue / imagesPerPage);
-    if (page === 1) {
-        galleryRender(data.hits);
-        showLoadBtn();
-    } else if (maxPages < page && page!=1) {
+    const maxPages = Math.ceil(totalHitsValue / imagesPerPage);
+    if (maxPages <= page) {
         hideLoadBtn();
         const error = new Error();
         error.code = 'MAX_PAGES';
